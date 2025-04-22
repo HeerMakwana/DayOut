@@ -6,7 +6,7 @@ require_once 'vendor/autoload.php';
 use GeminiAPI\Client;
 use GeminiAPI\Resources\Parts\TextPart;
 
-$apiKey = 'AIzaSyD_4VuSPIDP97NMTTJKNjMEunT53-0Ff0I'; 
+$apiKey = ''; //replave with your own api key
 $location = '';
 $startDate = '';
 $endDate = '';
