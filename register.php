@@ -8,21 +8,54 @@ $error = '';
 $success = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = sanitize_input($_POST['username']);
-    $email = sanitize_input($_POST['email']);
-    $password = $_POST['password'];
-    $hashedPassword = hash_password($password);
+    try {
+        $username = sanitize_input($_POST['username']);
+        $email = sanitize_input($_POST['email']);
+        $password = $_POST['password'];
 
-    $stmt = $conn->prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
-    $stmt->bind_param("sss", $username, $email, $hashedPassword);
+        // Validation
+        if (empty($username) || strlen($username) < 3) {
+            throw new Exception("Username must be at least 3 characters long.");
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new Exception("Invalid email format.");
+        }
+        if (strlen($password) < 6) {
+            throw new Exception("Password must be at least 6 characters long.");
+        }
 
-    if ($stmt->execute()) {
+        // Check if username or email already exists
+        $checkStmt = $conn->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
+        if (!$checkStmt) {
+            throw new Exception("Prepare failed: " . $conn->error);
+        }
+        $checkStmt->bind_param("ss", $username, $email);
+        $checkStmt->execute();
+        $checkStmt->store_result();
+        if ($checkStmt->num_rows > 0) {
+            throw new Exception("Username or email already exists.");
+        }
+        $checkStmt->close();
+
+        $hashedPassword = hash_password($password);
+
+        if (!$stmt = $conn->prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)")) {
+            throw new Exception("Prepare failed: " . $conn->error);
+        }
+
+        if (!$stmt->bind_param("sss", $username, $email, $hashedPassword)) {
+            throw new Exception("Bind param failed: " . $stmt->error);
+        }
+
+        if (!$stmt->execute()) {
+            throw new Exception("Execute failed: " . $stmt->error);
+        }
+
         $success = display_success("Registration successful. Please login.");
-    } else {
-        $error = display_error("Error: " . $stmt->error);
+        $stmt->close();
+    } catch (Exception $e) {
+        $error = display_error("Registration error: " . $e->getMessage());
     }
-
-    $stmt->close();
 }
 ?>
 
