@@ -93,5 +93,3 @@ The project uses an API key for the GeminiAPI client in `home_content.php`.
 - For any issues with database connection or API integration, check the PHP error logs and browser console for debugging.
 
 ---
-
-This README provides the essential steps to download, set up the database, and configure the API key for the DayOut project. Follow these instructions carefully to get the application running smoothly.
